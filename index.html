@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Firebase Chat</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<link rel="stylesheet" href="./assets/css/fonts.css">
+	<link rel="stylesheet" href="./assets/css/style.css">
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+	<![endif]-->
+</head>
+<body>
+	<div class="chat_window">
+		<div class="top_menu">
+			<div class="title">
+				Firebase Chat
+			</div>
+		</div>
+		<ul class="messages">
+			<div class="message-alert"></div>
+			<button class='login-facebook'>Logar com Facebook</button>
+		</ul>
+		<div class="bottom_wrapper clearfix">
+			<div class="message_input_wrapper">
+				<input class="message_input" placeholder="Digite a sua mensagem..." />
+			</div>
+			<div class="send_message">
+				<div class="icon">
+				</div>
+				<div class="text">
+					Enviar
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="message_template">
+		<li class="message">
+			<div class="avatar">
+				<img class="img-avatar"/>
+			</div>
+			<div class="text_wrapper">
+				<div class="email"></div>
+				<div class="text"></div>
+				<div class="when"></div>
+			</div>
+		</li>
+	</div>
+	<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+	<script src="./js/app.js"></script>
+</body>
+</html>

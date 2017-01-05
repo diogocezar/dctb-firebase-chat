@@ -27,19 +27,18 @@ Utils = {
 };
 
 Debug = {
-    debugMode : false,
-    constant  : '[DCTB] ',
-    log: function(msg){
+    debugMode : true,
+    log: function(errors){
         if(Debug.debugMode)
-            console.log(Debug.constant + msg);
+            console.log(errors);
     },
-    error: function(msg){
+    error: function(errors){
         if(Debug.debugMode)
-            console.error(Debug.constant + msg);
+            console.error(errors);
     },
-    info: function(msg){
+    info: function(errors){
         if(Debug.debugMode)
-            console.info(Debug.constant + msg);
+            console.info(errors);
     }
 };
 
@@ -103,6 +102,20 @@ FirebaseWrapper = {
             }).catch(function(error){
                 Debug.error([error.code, error.message]);
             });
+        },
+        sendFile: function(file, callBack){
+            var filename   = file.name;
+            var storageRef = firebase.storage().ref('/images/' + filename);
+            var uploadTask = storageRef.put(file);
+            uploadTask.on('state_changed', function(snapshot){
+                //console.log(snapshot);
+            }, function(error){
+                Debug.error([error.code, error.message]);
+            }, function() {
+                var downloadURL = uploadTask.snapshot.downloadURL;
+                if(!Utils.__is_empty(callBack))
+                    callBack(downloadURL);
+            });
         }
     },
     User: {
@@ -124,11 +137,14 @@ FirebaseWrapper = {
 
 Chat = {
     user : null,
+    selectedFile: null,
+    disabled: false,
     init: function(){
         FirebaseWrapper.Connect.init();
         Chat.Login.go();
         Chat.Send.setButtons();
         Chat.Send.setKeyPess();
+        Chat.Send.setChangeFile();
     },
     Login: {
         go: function(){
@@ -151,7 +167,11 @@ Chat = {
     Send: {
         setButtons: function(){
              $('.send_message').on('click', function(){ Chat.Send.go(); });
-             $('.login-facebook').on('click', function(){ Chat.Login.go(); })
+             $('.login-facebook').on('click', function(){ Chat.Login.go(); });
+             $('.file_upload_icon').on('click', function(){
+                if(!Chat.disabled)
+                    $(".file_upload").trigger('click');
+            });
         },
         setKeyPess: function(){
             $('.message_input').on('keyup', function(e){
@@ -160,25 +180,40 @@ Chat = {
                     Chat.Send.go();
              })
         },
+        setChangeFile: function(){
+            $(".file_upload").on("change", function(event){
+                Chat.selectedFile = event.target.files[0];
+                $('.file_upload_icon').addClass('selected');
+            });
+        },
         go: function(){
             var msg = $('.message_input').val();
-            if(!Utils.__is_empty(msg)){
+            if(!Utils.__is_empty(msg) && !Chat.disabled){
+                Chat.Messages.disable();
                 data = {
                     'email'   : FirebaseWrapper.User.getEmail(),
                     'picture' : FirebaseWrapper.User.getPicture(),
                     'msg'     : msg,
                     'when'    : new Date().toString()
                 };
-                FirebaseWrapper.Data.set('chat', data, function(){
-                    $('.message_input').val("");
-                    $('.message_input').focus();
-                    Chat.Messages.scollBottom();
-                });
+                if(!Utils.__is_empty(Chat.selectedFile)){
+                    FirebaseWrapper.Data.sendFile(Chat.selectedFile, function(url_file){
+                        data['url_file'] = url_file;
+                        FirebaseWrapper.Data.set('chat', data, function(){
+                            Chat.Messages.update();
+                        });
+                    })
+                }
+                else{
+                    FirebaseWrapper.Data.set('chat', data, function(){
+                        Chat.Messages.update();
+                    });
+                }
             }
         }
     },
     Messages : {
-        add: function(msg, email, picture, when){
+        add: function(msg, email, picture, when, url_file){
             var side  = (email == FirebaseWrapper.User.getEmail()) ? 'left' : 'right';
             var clone = $($('.message_template').clone().html());
             clone.addClass(side);
@@ -186,6 +221,10 @@ Chat = {
             clone.find('.text').html(msg);
             clone.find('.when').html(Utils.__format_date(when));
             clone.find('.img-avatar').attr('src', picture);
+            if(!Utils.__is_empty(url_file)){
+                clone.find('.img-file').attr('src', url_file);
+                clone.find('.img-file').css({'display' : 'block'});
+            }
             clone.addClass('appeared');
             $('.messages').append(clone);
         },
@@ -197,12 +236,32 @@ Chat = {
         plot: function(items){
             $('.messages').empty();
             for(var i=0; i<items.length; i++){
-                Chat.Messages.add(items[i].msg, items[i].email, items[i].picture, items[i].when);
+                Chat.Messages.add(items[i].msg, items[i].email, items[i].picture, items[i].when, items[i].url_file);
             }
             Chat.Messages.scollBottom();
         },
         scollBottom: function(){
             $(".messages").scrollTop($(".messages")[0].scrollHeight);
+        },
+        update: function(){
+            Chat.selectedFile = null;
+            $('.file_upload_icon').removeClass('selected');
+            $(".file_upload").val("");
+            $('.message_input').val("");
+            $('.message_input').focus();
+            Chat.Messages.scollBottom();
+            Chat.Messages.enable();
+        },
+        disable: function(){
+            $('.message_input').val("");
+            $('.message_input').attr('placeHolder', "Aguarde...");
+            $('.message_input').prop('disabled', true);
+            Chat.disabled = true;
+        },
+        enable: function(){
+            $('.message_input').attr('placeHolder', "Digite a sua mensagem...");
+            $('.message_input').prop('disabled', false);
+            Chat.disabled = false;
         }
     }
 };

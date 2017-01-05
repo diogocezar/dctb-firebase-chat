@@ -7,6 +7,25 @@ body {
 	font-family: "CircularStd-Book";
 }
 
+button[disabled], html input[disabled] {
+    cursor: default;
+    background-color: transparent;
+}
+
+.bottom_wrapper .message_input_wrapper .message_input::-webkit-input-placeholder {
+    color:    #bcbdc0;
+}
+.bottom_wrapper .message_input_wrapper .message_input:-moz-placeholder {
+   color:    #bcbdc0;
+   opacity:  1;
+}
+.bottom_wrapper .message_input_wrapper .message_input::-moz-placeholder {
+   color:    #bcbdc0;
+   opacity:  1;
+}
+.bottom_wrapper .message_input_wrapper .message_input:-ms-input-placeholder {
+   color:    #bcbdc0;
+}
 .login-facebook{
     position: relative;
     float: left;
@@ -19,7 +38,6 @@ body {
     left: 50%;
     transform: translateX(-50%);
 }
-
 .chat_window {
 	position: absolute;
 	width: 50%;
@@ -31,21 +49,18 @@ body {
 	background-color: #f8f8f8;
 	overflow: hidden;
 }
-
 .top_menu {
 	background-color: #fff;
 	width: 100%;
 	padding: 20px 0 15px;
 	box-shadow: 0 1px 30px rgba(0, 0, 0, 0.05);
 }
-
 .top_menu .title {
 	text-align: center;
 	color: #bcbdc0;
 	font-size: 20px;
 	font-family: 'CircularStd-Bold';
 }
-
 .messages {
 	position: relative;
 	list-style: none;
@@ -61,7 +76,6 @@ body {
 	font-size: 16px;
 	font-family: 'CircularStd-Bold';
 }
-
 .messages .message {
 	clear: both;
 	overflow: hidden;
@@ -165,7 +179,29 @@ body {
 	font-size: 18px;
 	font-weight: 300;
 }
-
+.img-file{
+	max-height: 150px;
+	max-width: 150px;
+	display: none;
+	border-radius: 50%;
+	margin-top: 10px;
+    margin-bottom: 10px;
+}
+.file_upload{
+	display: none!important;
+}
+.file_upload_icon{
+    position: absolute;
+    right: 0px;
+    height: 30px;
+    width: 30px;
+    cursor: pointer;
+    top: 10px;
+    margin-right: 17px;
+}
+.selected{
+	opacity: 0.5;
+}
 .bottom_wrapper {
 	position: relative;
 	width: 100%;
@@ -188,7 +224,7 @@ body {
 	width: calc(100% - 40px);
 	position: absolute;
 	outline-width: 0;
-	color: gray;
+	color: #bcbdc0;
 }
 .bottom_wrapper .send_message {
 	width: 140px;
@@ -213,13 +249,10 @@ body {
 	display: inline-block;
 	line-height: 48px;
 }
-
 .message_template {
 	display: none;
 }
-
 /* Responsive Adjustments */
-
 @media screen and (max-width: 1199px){
 	.chat_window {
 		width: 80%;
@@ -229,8 +262,13 @@ body {
 	    height: 74vh;
 	}
 }
-
 @media screen and (max-width: 700px){
+	.file_upload_icon {
+	    height: 25px;
+	    width: 25px;
+	    top: 4px;
+	    margin-right: 9px;
+	}
 	.chat_window {
 		height: 95vh;
 	}
@@ -271,9 +309,16 @@ body {
 		line-height: 35px;
 	}
 	.messages {
-	    height: 71vh;
+	    height: 68vh;
 	}
 	.chat_window {
-		width: 90%;
+		width: 90vw;
+	}
+	.bottom_wrapper {
+	    position: absolute;
+	    width: 100%;
+	    background-color: #fff;
+	    padding: 20px 20px;
+	    bottom: 0;
 	}
 }

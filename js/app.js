@@ -1,150 +1,14 @@
-Utils = {
-    __is_empty: function(val){
-        return (val == "" || val == null || val == undefined);
-    },
-    __format_date: function(date){
-        if(!Utils.__is_empty(date)){
-            var d  = new Date(date),
-            month  = '' + (d.getMonth() + 1),
-            day    = '' + d.getDate(),
-            year   = '' + d.getFullYear(),
-            hour   = '' + d.getHours(),
-            minute = '' + d.getMinutes(),
-            second = '' + d.getSeconds();
-            if (month.length < 2) month = '0' + month;
-            if (day.length < 2) day = '0' + day;
-            if (hour.length < 2) hour = '0' + hour;
-            if (minute.length < 2) minute = '0' + minute;
-            if (second.length < 2) second = '0' + second;
-            var date = [day, month, year].join('/');
-            var time = [hour, minute, second].join(':');
-            return date +  " " + time;
-        }
-        else{
-            return false;
-        }
-    }
-};
-
-Debug = {
-    debugMode : true,
-    log: function(errors){
-        if(Debug.debugMode)
-            console.log(errors);
-    },
-    error: function(errors){
-        if(Debug.debugMode)
-            console.error(errors);
-    },
-    info: function(errors){
-        if(Debug.debugMode)
-            console.info(errors);
-    }
-};
-
-FirebaseWrapper = {
-    Config : {
-        apiKey            : "",
-        authDomain        : "",
-        databaseURL       : "",
-        storageBucket     : "",
-        messagingSenderId : ""
-    },
-    Connect : {
-        init: function(){
-            firebase.initializeApp(FirebaseWrapper.Config);
-        }
-    },
-    Login : {
-        facebook: function(callBack){
-            firebase.auth().onAuthStateChanged(function(user){
-                if (!user){
-                    var provider = new firebase.auth.FacebookAuthProvider();
-                    provider.addScope('email');
-                    provider.addScope('user_about_me');
-                    firebase.auth().signInWithPopup(provider).then(function(result){
-                        if(!Utils.__is_empty(callBack))
-                            callBack(result.user);
-                    }).catch(function(error){
-                        if(!Utils.__is_empty(callBack))
-                            callBack(false, error);
-                    });
-                }
-                else{
-                    if(!Utils.__is_empty(callBack))
-                        callBack(user);
-                }
-            });
-        }
-    },
-    Data : {
-        inspect: function(uri, callBack){
-            var ref = firebase.database().ref(uri);
-            ref.on('value', function(snapshot){
-                callBack(snapshot.val());
-            });
-        },
-        get: function(uri, callBack){
-            var ref = firebase.database().ref(uri);
-            ref.once('value', function(snapshot){
-                callBack(snapshot.val());
-            }).catch(function(error){
-                Debug.error([error.code, error.message]);
-            });
-        },
-        set: function(uri, data, callBack){
-            var ref = firebase.database().ref(uri);
-            ref.once('value').then(function(snapshot){
-                var max = parseInt(snapshot.numChildren());
-                firebase.database().ref(uri + '/' + (max++)).set(data);
-                if(!Utils.__is_empty(callBack))
-                    callBack();
-            }).catch(function(error){
-                Debug.error([error.code, error.message]);
-            });
-        },
-        sendFile: function(file, callBack){
-            var filename   = file.name;
-            var storageRef = firebase.storage().ref('/images/' + filename);
-            var uploadTask = storageRef.put(file);
-            uploadTask.on('state_changed', function(snapshot){
-                //console.log(snapshot);
-            }, function(error){
-                Debug.error([error.code, error.message]);
-            }, function() {
-                var downloadURL = uploadTask.snapshot.downloadURL;
-                if(!Utils.__is_empty(callBack))
-                    callBack(downloadURL);
-            });
-        }
-    },
-    User: {
-        user : null,
-        get: function(){
-            return FirebaseWrapper.User.user;
-        },
-        set: function(user){
-            FirebaseWrapper.User.user = user;
-        },
-        getPicture: function(){
-            return FirebaseWrapper.User.user['photoURL'];
-        },
-        getEmail: function(){
-            return FirebaseWrapper.User.user['email'];
-        }
-    }
-};
-
-Chat = {
-    user : null,
-    selectedFile: null,
-    disabled: false,
+App = {
+    user         : null,
+    selectedFile : null,
+    disabled     : false,
+    path         : 'chat',
     init: function(){
         FirebaseWrapper.Connect.init();
-        Chat.Login.go();
-        Chat.Send.setButtons();
-        Chat.Send.setKeyPess();
-        Chat.Send.setChangeFile();
+        App.Login.go();
+        App.Send.setButtons();
+        App.Send.setKeyPess();
+        App.Send.setChangeFile();
     },
     Login: {
         go: function(){
@@ -153,11 +17,11 @@ Chat = {
             FirebaseWrapper.Login.facebook(function(user, error){
                 if(!Utils.__is_empty(user)){
                     FirebaseWrapper.User.set(user);
-                    Chat.Messages.inspect();
+                    App.Messages.inspect();
                 }
                 else{
                     if(error.code == "auth/popup-closed-by-user"){
-                        $(".message-alert").empty().html("Você precisa logar com o Facebook para acessar o chat.");
+                        $(".message-alert").empty().html("Você precisa logar com o Facebook para acessar o App.");
                         $(".login-facebook").show();
                     }
                 }
@@ -166,10 +30,10 @@ Chat = {
     },
     Send: {
         setButtons: function(){
-             $('.send_message').on('click', function(){ Chat.Send.go(); });
-             $('.login-facebook').on('click', function(){ Chat.Login.go(); });
+             $('.send_message').on('click', function(){ App.Send.go(); });
+             $('.login-facebook').on('click', function(){ App.Login.go(); });
              $('.file_upload_icon').on('click', function(){
-                if(!Chat.disabled)
+                if(!App.disabled)
                     $(".file_upload").trigger('click');
             });
         },
@@ -177,36 +41,36 @@ Chat = {
             $('.message_input').on('keyup', function(e){
                 var code = (e.keyCode ? e.keyCode : e.which);
                 if(code==13)
-                    Chat.Send.go();
+                    App.Send.go();
              })
         },
         setChangeFile: function(){
             $(".file_upload").on("change", function(event){
-                Chat.selectedFile = event.target.files[0];
+                App.selectedFile = event.target.files[0];
                 $('.file_upload_icon').addClass('selected');
             });
         },
         go: function(){
             var msg = $('.message_input').val();
-            if(!Utils.__is_empty(msg) && !Chat.disabled){
-                Chat.Messages.disable();
+            if(!Utils.__is_empty(msg) && !App.disabled){
+                App.Messages.disable();
                 data = {
                     'email'   : FirebaseWrapper.User.getEmail(),
                     'picture' : FirebaseWrapper.User.getPicture(),
                     'msg'     : msg,
                     'when'    : new Date().toString()
                 };
-                if(!Utils.__is_empty(Chat.selectedFile)){
-                    FirebaseWrapper.Data.sendFile(Chat.selectedFile, function(url_file){
+                if(!Utils.__is_empty(App.selectedFile)){
+                    FirebaseWrapper.Data.sendFile(App.selectedFile, function(url_file){
                         data['url_file'] = url_file;
-                        FirebaseWrapper.Data.set('chat', data, function(){
-                            Chat.Messages.update();
+                        FirebaseWrapper.Data.set(App.path, data, function(){
+                            App.Messages.update();
                         });
                     })
                 }
                 else{
-                    FirebaseWrapper.Data.set('chat', data, function(){
-                        Chat.Messages.update();
+                    FirebaseWrapper.Data.set(App.path, data, function(){
+                        App.Messages.update();
                     });
                 }
             }
@@ -229,43 +93,43 @@ Chat = {
             $('.messages').append(clone);
         },
         inspect: function(){
-            FirebaseWrapper.Data.inspect('chat', function(snapshot){
-                Chat.Messages.plot(snapshot);
+            FirebaseWrapper.Data.inspect(App.path, function(snapshot){
+                App.Messages.plot(snapshot);
             })
         },
         plot: function(items){
             $('.messages').empty();
             for(var i=0; i<items.length; i++){
-                Chat.Messages.add(items[i].msg, items[i].email, items[i].picture, items[i].when, items[i].url_file);
+                App.Messages.add(items[i].msg, items[i].email, items[i].picture, items[i].when, items[i].url_file);
             }
-            Chat.Messages.scollBottom();
+            App.Messages.scollBottom();
         },
         scollBottom: function(){
             $(".messages").scrollTop($(".messages")[0].scrollHeight);
         },
         update: function(){
-            Chat.selectedFile = null;
+            App.selectedFile = null;
             $('.file_upload_icon').removeClass('selected');
             $(".file_upload").val("");
             $('.message_input').val("");
             $('.message_input').focus();
-            Chat.Messages.scollBottom();
-            Chat.Messages.enable();
+            App.Messages.scollBottom();
+            App.Messages.enable();
         },
         disable: function(){
             $('.message_input').val("");
             $('.message_input').attr('placeHolder', "Aguarde...");
             $('.message_input').prop('disabled', true);
-            Chat.disabled = true;
+            App.disabled = true;
         },
         enable: function(){
             $('.message_input').attr('placeHolder', "Digite a sua mensagem...");
             $('.message_input').prop('disabled', false);
-            Chat.disabled = false;
+            App.disabled = false;
         }
     }
 };
 
 $(document).ready(function() {
-    Chat.init();
+    App.init();
 });

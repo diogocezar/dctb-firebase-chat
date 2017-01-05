@@ -3,17 +3,26 @@
 		"rules": "database.rules.json"
 	},
 	"hosting": {
+		"cleanUrls": true,
 		"public": "./",
 		"rewrites": [
 			{
-				"source": "**",
+				"source": "/teste",
+				"destination": "/teste.html"
+			},
+			{
+				"source": "/produto/",
+				"destination": "/produto.html"
+			},
+			{
+				"source": "/",
 				"destination": "/index.html"
 			}
 		],
-		"redirects": [{
-			"source" : "/teste",
-			"destination" : "/teste.html",
-			"type" : 301
-		}]
+		"ignore": [
+			"firebase.json",
+			"**/.*",
+			"**/.git/**"
+		]
 	}
 }
